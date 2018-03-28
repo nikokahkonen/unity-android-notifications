@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.util.Log;
 
 import com.unity3d.player.UnityPlayer;
 
@@ -31,13 +32,9 @@ import java.util.Set;
 
 public class UnityNotificationManager extends BroadcastReceiver
 {
-    private static Set<String> channels = new HashSet<>();
-
     public static void CreateChannel(String identifier, String name, String description, int importance, String soundName, int enableLights, int lightColor, int enableVibration, long[] vibrationPattern, String bundle) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             return;
-
-        channels.add(identifier);
 
         NotificationManager nm = (NotificationManager) UnityPlayer.currentActivity.getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel channel = new NotificationChannel(identifier, name, importance);
@@ -59,11 +56,17 @@ public class UnityNotificationManager extends BroadcastReceiver
 
     @TargetApi(24)
     private static void createChannelIfNeeded(String identifier, String name, String soundName, boolean enableLights, boolean enableVibration, String bundle) {
-        if (channels.contains(identifier))
+        if (channelExists(identifier))
             return;
-        channels.add(identifier);
 
         CreateChannel(identifier, name, identifier + " notifications", NotificationManager.IMPORTANCE_DEFAULT, soundName, enableLights ? 1 : 0, Color.GREEN, enableVibration ? 1 : 0, null, bundle);
+    }
+
+    private static boolean channelExists(String identifier)
+    {
+        NotificationManager nm = (NotificationManager) UnityPlayer.currentActivity.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel channel = nm.getNotificationChannel(identifier);
+        return (channel != null);
     }
 
     public static void SetNotification(int id, long delayMs, String title, String message, String ticker, int sound, String soundName, int vibrate,
